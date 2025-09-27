@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>GST Calculator</title>
+	<meta name="description" content="Advanced GST calculator with itemized breakdown, inclusive/exclusive modes, CGST/SGST split and export." />
+	<link rel="stylesheet" href="style.css" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+	<header class="app-header">
+		<div class="branding">
+			<h1>GST Calculator</h1>
+			<p class="tagline">Fast • Accurate • Modern</p>
+			<p class="credit" aria-label="Author credit">by Mubasheer</p>
+		</div>
+		<nav class="utility-actions" aria-label="Utility actions">
+			<button id="themeToggle" class="ghost" title="Toggle light/dark mode" aria-pressed="false">🌗</button>
+			<button id="printBtn" class="ghost" title="Print / Save as PDF">🖨️</button>
+			<button id="shareBtn" class="ghost" title="Copy summary">📋</button>
+			<button id="resetAll" class="danger ghost" title="Reset all">↺</button>
+		</nav>
+	</header>
+
+	<main class="layout" id="main" tabindex="-1">
+		<section class="card" aria-labelledby="single-calc-title">
+			<h2 id="single-calc-title" class="section-title">Single Amount Calculator</h2>
+			<form id="singleForm" class="form-grid" autocomplete="off">
+				<div class="field">
+					<label for="amountInput">Amount</label>
+					<div class="with-addon">
+						<span class="addon" aria-hidden="true">₹</span>
+						<input id="amountInput" name="amount" type="text" inputmode="decimal" placeholder="0.00" required />
+					</div>
+					<small class="hint" id="amountModeHint">Enter base amount (exclusive).</small>
+				</div>
+				<div class="field">
+					<label for="rateSelect">GST Rate</label>
+					<select id="rateSelect" name="rate">
+						<option value="0" selected>0%</option>
+						<option value="5">5%</option>
+						<option value="12">12%</option>
+						<option value="18">18%</option>
+						<option value="28">28%</option>
+						<option value="custom">Custom…</option>
+					</select>
+					<input id="customRate" class="hidden" type="text" inputmode="decimal" placeholder="Custom %" aria-label="Custom rate" />
+				</div>
+				<fieldset class="field inline" aria-labelledby="modeLegend">
+					<legend id="modeLegend">Mode</legend>
+					<label><input type="radio" name="mode" value="exclusive" checked /> Exclusive</label>
+					<label><input type="radio" name="mode" value="inclusive" /> Inclusive</label>
+				</fieldset>
+				<fieldset class="field inline" aria-labelledby="intraLegend">
+					<legend id="intraLegend">Supply Type</legend>
+					<label><input type="radio" name="supplyType" value="intra" checked /> Intra (CGST+SGST)</label>
+					<label><input type="radio" name="supplyType" value="inter" /> Inter (IGST)</label>
+				</fieldset>
+				<div class="field">
+					<label for="rounding">Rounding</label>
+						<select id="rounding" name="rounding">
+							<option value="normal" selected>Normal</option>
+							<option value="up">Round Up</option>
+							<option value="down">Round Down</option>
+						</select>
+				</div>
+				<div class="actions">
+					<button type="submit" class="primary">Calculate</button>
+					<button type="button" id="clearSingle" class="ghost">Clear</button>
+				</div>
+			</form>
+			<div id="singleResult" class="results" aria-live="polite"></div>
+		</section>
+
+		<section class="card" aria-labelledby="items-calc-title">
+			<h2 id="items-calc-title" class="section-title">Itemized Calculator</h2>
+			<div class="toolbar">
+				<button id="addItem" class="small">+ Add Item</button>
+				<button id="bulkSample" class="small ghost" title="Insert sample rows">Demo Data</button>
+			</div>
+			<div class="responsive-table-wrapper">
+				<table class="items-table" id="itemsTable">
+					<thead>
+						<tr>
+							<th scope="col">#</th>
+							<th scope="col">Description</th>
+							<th scope="col">Mode</th>
+							<th scope="col">Amount (₹)</th>
+							<th scope="col">Rate %</th>
+							<th scope="col">GST (₹)</th>
+							<th scope="col">Net (₹)</th>
+							<th scope="col">Gross (₹)</th>
+							<th scope="col" class="actions-col">✕</th>
+						</tr>
+					</thead>
+					<tbody id="itemBody">
+					</tbody>
+				</table>
+			</div>
+			<div class="table-footer" id="itemSummary" aria-live="polite"></div>
+		</section>
+
+		<section class="card" aria-labelledby="explain-title">
+			<h2 class="section-title" id="explain-title">How It Works</h2>
+			<details open>
+				<summary>Formulae</summary>
+				<ul class="formulae">
+					<li><strong>Exclusive →</strong> Gross = Base + (Base × Rate/100)</li>
+					<li><strong>Inclusive →</strong> Base = Gross / (1 + Rate/100); GST = Gross − Base</li>
+					<li><strong>CGST & SGST (Intra):</strong> Each = GST / 2</li>
+					<li><strong>IGST (Inter):</strong> IGST = GST</li>
+				</ul>
+			</details>
+			<details>
+				<summary>Tips</summary>
+				<ul class="tips">
+					<li>Use Inclusive when the entered amount already contains tax.</li>
+					<li>Click column headers to cycle focus through inputs (Shift reverses).</li>
+					<li>Use the Print button to save a PDF.</li>
+				</ul>
+			</details>
+		</section>
+	</main>
+
+	<footer class="app-footer">
+		<p>Built for accuracy & learning. No data is sent to a server.</p>
+	</footer>
+
+	<template id="rowTemplate">
+		<tr>
+			<td class="row-index"></td>
+			<td><input type="text" class="desc" placeholder="Item" /></td>
+			<td>
+				<select class="mode">
+					<option value="exclusive" selected>E</option>
+					<option value="inclusive">I</option>
+				</select>
+			</td>
+			<td><input type="text" class="amt" inputmode="decimal" placeholder="0.00" /></td>
+			<td><input type="text" class="rate" inputmode="decimal" placeholder="%" /></td>
+			<td class="gst" data-value="0">0.00</td>
+			<td class="net" data-value="0">0.00</td>
+			<td class="gross" data-value="0">0.00</td>
+			<td><button class="row-del" title="Remove row">✕</button></td>
+		</tr>
+	</template>
+
+	<script src="script.js" defer></script>
+</body>
+</html>
